@@ -1,4 +1,11 @@
 #![allow(non_snake_case)]
+#![allow(
+    clippy::approx_constant,
+    clippy::manual_clamp,
+    clippy::excessive_precision,
+    clippy::too_many_arguments,
+    clippy::needless_late_init
+)]
 pub mod constants;
 pub mod diffraction;
 pub mod entry;

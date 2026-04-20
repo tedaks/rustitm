@@ -68,7 +68,7 @@ pub fn longley_rice(
         *warnings |= WARN_SURFACE_REFRACTIVITY;
     }
 
-    if a_e__meter < 4000000.0 || a_e__meter > 13333333.0 {
+    if !(4000000.0..=13333333.0).contains(&a_e__meter) {
         return ERROR_EFFECTIVE_EARTH;
     }
 
@@ -330,7 +330,7 @@ pub fn itm_p2p_tls_ex(
         h_sys__meter += pfl[i as usize + 2];
     }
 
-    h_sys__meter = h_sys__meter / (np - 2 * p10 + 1) as f64;
+    h_sys__meter /= (np - 2 * p10 + 1) as f64;
 
     let mut z_g = ComplexDouble::new(0.0, 0.0);
     let mut gamma_e = 0.0f64;

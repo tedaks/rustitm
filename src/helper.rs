@@ -40,7 +40,7 @@ pub fn height_function(x__km: f64, k: f64) -> f64 {
         if k < 1e-5 || x__km * w.powi(3) > 5495.0 {
             result = -117.0;
             if x__km > 1.0 {
-                result = 17.372 * x__km.ln() + result;
+                result += 17.372 * x__km.ln();
             }
         } else {
             result = 2.5e-5 * x__km.powi(2) / k - 8.686 * w - 15.0;

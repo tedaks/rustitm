@@ -64,10 +64,7 @@ pub fn compute_delta_h(pfl: &[f64], d_start__meter: f64, d_end__meter: f64) -> f
 
     let delta_h_d__meter = q10 - q90;
 
-    let delta_h__meter =
-        delta_h_d__meter / (1.0 - 0.8 * (-(d_end__meter - d_start__meter) / 50e3).exp());
-
-    delta_h__meter
+    delta_h_d__meter / (1.0 - 0.8 * (-(d_end__meter - d_start__meter) / 50e3).exp())
 }
 
 pub fn find_horizons(
@@ -149,7 +146,7 @@ pub fn linear_least_squares_fit(
         scaled_sum_y += pfl[i_start_iter as usize + 2] * mid_shifted_index;
     }
 
-    sum_y = sum_y / x_length;
+    sum_y /= x_length;
     scaled_sum_y = scaled_sum_y * 12.0 / ((x_length * x_length + 2.0) * x_length);
 
     *fit_y1 = sum_y - scaled_sum_y * mid_shifted_end;

@@ -203,17 +203,17 @@ pub fn validate_inputs(
     mdvar: i32,
     warnings: &mut i32,
 ) -> i32 {
-    if h_tx__meter < 1.0 || h_tx__meter > 1000.0 {
+    if !(1.0..=1000.0).contains(&h_tx__meter) {
         *warnings |= WARN_TX_TERMINAL_HEIGHT;
     }
-    if h_tx__meter < 0.5 || h_tx__meter > 3000.0 {
+    if !(0.5..=3000.0).contains(&h_tx__meter) {
         return ERROR_TX_TERMINAL_HEIGHT;
     }
 
-    if h_rx__meter < 1.0 || h_rx__meter > 1000.0 {
+    if !(1.0..=1000.0).contains(&h_rx__meter) {
         *warnings |= WARN_RX_TERMINAL_HEIGHT;
     }
-    if h_rx__meter < 0.5 || h_rx__meter > 3000.0 {
+    if !(0.5..=3000.0).contains(&h_rx__meter) {
         return ERROR_RX_TERMINAL_HEIGHT;
     }
 
@@ -228,14 +228,14 @@ pub fn validate_inputs(
         return ERROR_INVALID_RADIO_CLIMATE;
     }
 
-    if n_0 < 250.0 || n_0 > 400.0 {
+    if !(250.0..=400.0).contains(&n_0) {
         return ERROR_REFRACTIVITY;
     }
 
-    if f__mhz < 40.0 || f__mhz > 10000.0 {
+    if !(40.0..=10000.0).contains(&f__mhz) {
         *warnings |= WARN_FREQUENCY;
     }
-    if f__mhz < 20.0 || f__mhz > 20000.0 {
+    if !(20.0..=20000.0).contains(&f__mhz) {
         return ERROR_FREQUENCY;
     }
 

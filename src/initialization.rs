@@ -54,7 +54,7 @@ pub fn initialize_area(
             }
 
             if h__meter[i] < 5.0 {
-                b = b * (0.1 * PI * h__meter[i]).sin();
+                b *= (0.1 * PI * h__meter[i]).sin();
             }
 
             h_e__meter[i] = h__meter[i]
@@ -87,8 +87,6 @@ pub fn quick_pfl(
     let mut fit_tx: f64 = 0.0;
     let mut fit_rx: f64 = 0.0;
     let mut q: f64;
-    let d_start__meter: f64;
-    let d_end__meter: f64;
 
     *d__meter = pfl[0] * pfl[1];
 
@@ -98,8 +96,8 @@ pub fn quick_pfl(
 
     find_horizons(pfl, a_e__meter, h__meter, theta_hzn, d_hzn__meter);
 
-    d_start__meter = itm_min(15.0 * h__meter[0], 0.1 * d_hzn__meter[0]);
-    d_end__meter = *d__meter - itm_min(15.0 * h__meter[1], 0.1 * d_hzn__meter[1]);
+    let d_start__meter: f64 = itm_min(15.0 * h__meter[0], 0.1 * d_hzn__meter[0]);
+    let d_end__meter: f64 = *d__meter - itm_min(15.0 * h__meter[1], 0.1 * d_hzn__meter[1]);
 
     *delta_h__meter = compute_delta_h(pfl, d_start__meter, d_end__meter);
 
@@ -119,7 +117,7 @@ pub fn quick_pfl(
             q = (*d__meter / combined_horizons__meter).powi(2);
 
             for i in 0..2 {
-                h_e__meter[i] = h_e__meter[i] * q;
+                h_e__meter[i] *= q;
                 d_hzn__meter[i] = (2.0 * h_e__meter[i] * a_e__meter).sqrt()
                     * (-0.07 * (*delta_h__meter / itm_max(h_e__meter[i], 5.0)).sqrt()).exp();
             }
