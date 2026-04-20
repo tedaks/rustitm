@@ -1,7 +1,7 @@
-use crate::types::ComplexDouble;
 use crate::constants::PI;
-use crate::helper::{itm_min, itm_max};
-use crate::terrain::{terrain_roughness, sigma_h_function};
+use crate::helper::{itm_max, itm_min};
+use crate::terrain::{sigma_h_function, terrain_roughness};
+use crate::types::ComplexDouble;
 
 pub fn line_of_sight_loss(
     d__meter: f64,
@@ -18,10 +18,12 @@ pub fn line_of_sight_loss(
 
     let wn = f__mhz / 47.7;
 
-    let sin_psi = (h_e__meter[0] + h_e__meter[1]) / (d__meter.powi(2) + (h_e__meter[0] + h_e__meter[1]).powi(2)).sqrt();
+    let sin_psi = (h_e__meter[0] + h_e__meter[1])
+        / (d__meter.powi(2) + (h_e__meter[0] + h_e__meter[1]).powi(2)).sqrt();
 
     let sin_psi_c = ComplexDouble::new(sin_psi, 0.0);
-    let mut r_e = (sin_psi_c - z_g) / (sin_psi_c + z_g) * (-itm_min(10.0, wn * sigma_h_d__meter * sin_psi)).exp();
+    let mut r_e = (sin_psi_c - z_g) / (sin_psi_c + z_g)
+        * (-itm_min(10.0, wn * sigma_h_d__meter * sin_psi)).exp();
 
     let q = r_e.re * r_e.re + r_e.im * r_e.im;
     if q < 0.25 || q < sin_psi {

@@ -1,5 +1,5 @@
-use crate::helper::{itm_max, itm_min, h0_function};
 use crate::constants::SQRT2;
+use crate::helper::{h0_function, itm_max, itm_min};
 
 pub fn f_function(td: f64) -> f64 {
     let a = [133.4, 104.6, 71.8];
@@ -60,18 +60,27 @@ pub fn troposcatter_loss(
 
         let z_0__meter = 1.7556e3;
         let z_1__meter = 8.0e3;
-        let eta_s = (h_0__meter / z_0__meter) * (1.0 + (0.031 - n_s * 2.32e-3 + n_s.powi(2) * 5.67e-6) * (-itm_min(1.7, h_0__meter / z_1__meter).powi(6)).exp());
+        let eta_s = (h_0__meter / z_0__meter)
+            * (1.0
+                + (0.031 - n_s * 2.32e-3 + n_s.powi(2) * 5.67e-6)
+                    * (-itm_min(1.7, h_0__meter / z_1__meter).powi(6)).exp());
 
         let h_00 = (h0_function(r_1, eta_s) + h0_function(r_2, eta_s)) / 2.0;
-        let delta_h_0 = itm_min(h_00, 6.0 * (0.6 - itm_max(eta_s, 1.0).log10()) * s.log10() * q.log10());
+        let delta_h_0 = itm_min(
+            h_00,
+            6.0 * (0.6 - itm_max(eta_s, 1.0).log10()) * s.log10() * q.log10(),
+        );
 
         let mut h_0_result = h_00 + delta_h_0;
         h_0_result = itm_max(h_0_result, 0.0);
 
         if eta_s < 1.0 {
-            h_0_result = eta_s * h_0_result + (1.0 - eta_s) * 10.0
-                * (((1.0 + SQRT2 / r_1) * (1.0 + SQRT2 / r_2)).powi(2)
-                   * (r_1 + r_2) / (r_1 + r_2 + 2.0 * SQRT2)).log10();
+            h_0_result = eta_s * h_0_result
+                + (1.0 - eta_s)
+                    * 10.0
+                    * (((1.0 + SQRT2 / r_1) * (1.0 + SQRT2 / r_2)).powi(2) * (r_1 + r_2)
+                        / (r_1 + r_2 + 2.0 * SQRT2))
+                        .log10();
         }
 
         if h_0_result > 15.0 && *h0 >= 0.0 {
@@ -86,5 +95,7 @@ pub fn troposcatter_loss(
 
     let d_0__meter = 40e3;
     let h__meter = 47.7;
-    f_function(th * d__meter) + 10.0 * (wn * h__meter * th.powi(4)).log10() - 0.1 * (n_s - 301.0) * (-th * d__meter / d_0__meter).exp() + h_0_val
+    f_function(th * d__meter) + 10.0 * (wn * h__meter * th.powi(4)).log10()
+        - 0.1 * (n_s - 301.0) * (-th * d__meter / d_0__meter).exp()
+        + h_0_val
 }

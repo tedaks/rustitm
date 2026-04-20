@@ -1,13 +1,25 @@
 pub fn itm_max(a: f64, b: f64) -> f64 {
-    if a > b { a } else { b }
+    if a > b {
+        a
+    } else {
+        b
+    }
 }
 
 pub fn itm_min(a: f64, b: f64) -> f64 {
-    if a < b { a } else { b }
+    if a < b {
+        a
+    } else {
+        b
+    }
 }
 
 pub fn fortran_dim(x: f64, y: f64) -> f64 {
-    if x > y { x - y } else { 0.0 }
+    if x > y {
+        x - y
+    } else {
+        0.0
+    }
 }
 
 pub fn fresnel_integral(v2: f64) -> f64 {

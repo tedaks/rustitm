@@ -1,7 +1,7 @@
+use crate::constants::{A_0_METER, MODE_P2P, THIRD};
+use crate::helper::{fresnel_integral, height_function, itm_min};
+use crate::terrain::{sigma_h_function, terrain_roughness};
 use crate::types::ComplexDouble;
-use crate::constants::{A_0_METER, THIRD, MODE_P2P};
-use crate::helper::{itm_min, fresnel_integral, height_function};
-use crate::terrain::{terrain_roughness, sigma_h_function};
 
 pub fn knife_edge_diffraction(
     d__meter: f64,
@@ -15,8 +15,10 @@ pub fn knife_edge_diffraction(
 
     let d_nlos__meter = d__meter - d_ML__meter;
 
-    let v_1 = 0.0795775 * (f__mhz / 47.7) * theta_nlos.powi(2) * d_hzn__meter[0] * d_nlos__meter / (d_nlos__meter + d_hzn__meter[0]);
-    let v_2 = 0.0795775 * (f__mhz / 47.7) * theta_nlos.powi(2) * d_hzn__meter[1] * d_nlos__meter / (d_nlos__meter + d_hzn__meter[1]);
+    let v_1 = 0.0795775 * (f__mhz / 47.7) * theta_nlos.powi(2) * d_hzn__meter[0] * d_nlos__meter
+        / (d_nlos__meter + d_hzn__meter[0]);
+    let v_2 = 0.0795775 * (f__mhz / 47.7) * theta_nlos.powi(2) * d_hzn__meter[1] * d_nlos__meter
+        / (d_nlos__meter + d_hzn__meter[1]);
 
     fresnel_integral(v_1) + fresnel_integral(v_2)
 }
@@ -81,12 +83,23 @@ pub fn diffraction_loss(
     f__mhz: f64,
 ) -> f64 {
     let a_k__db = knife_edge_diffraction(d__meter, f__mhz, a_e__meter, theta_los, d_hzn__meter);
-    let a_se__db = smooth_earth_diffraction(d__meter, f__mhz, a_e__meter, theta_los, d_hzn__meter, h_e__meter, z_g);
+    let a_se__db = smooth_earth_diffraction(
+        d__meter,
+        f__mhz,
+        a_e__meter,
+        theta_los,
+        d_hzn__meter,
+        h_e__meter,
+        z_g,
+    );
 
     let delta_h_dsML__meter = terrain_roughness(d_sML__meter, delta_h__meter);
     let sigma_h_d__meter = sigma_h_function(delta_h_dsML__meter);
 
-    let a_fo__db = itm_min(15.0, 5.0 * (1.0 + 1e-5 * h__meter[0] * h__meter[1] * f__mhz * sigma_h_d__meter).log10());
+    let a_fo__db = itm_min(
+        15.0,
+        5.0 * (1.0 + 1e-5 * h__meter[0] * h__meter[1] * f__mhz * sigma_h_d__meter).log10(),
+    );
 
     let delta_h_d__meter = terrain_roughness(d__meter, delta_h__meter);
 
@@ -100,7 +113,8 @@ pub fn diffraction_loss(
     let term1 = (1.0 + qk / q).sqrt();
 
     let d_ML__meter = d_hzn__meter[0] + d_hzn__meter[1];
-    q = (term1 + (-theta_los * a_e__meter + d_ML__meter) / d__meter) * itm_min(delta_h_d__meter * f__mhz / 47.7, 6283.2);
+    q = (term1 + (-theta_los * a_e__meter + d_ML__meter) / d__meter)
+        * itm_min(delta_h_d__meter * f__mhz / 47.7, 6283.2);
 
     let w = 25.1 / (25.1 + q.sqrt());
 

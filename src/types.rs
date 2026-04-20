@@ -50,7 +50,10 @@ impl std::ops::Sub for ComplexDouble {
 impl std::ops::Mul for ComplexDouble {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self {
-        Self::new(self.re * rhs.re - self.im * rhs.im, self.re * rhs.im + self.im * rhs.re)
+        Self::new(
+            self.re * rhs.re - self.im * rhs.im,
+            self.re * rhs.im + self.im * rhs.re,
+        )
     }
 }
 
@@ -58,7 +61,10 @@ impl std::ops::Div for ComplexDouble {
     type Output = Self;
     fn div(self, rhs: Self) -> Self {
         let denom = rhs.re * rhs.re + rhs.im * rhs.im;
-        Self::new((self.re * rhs.re + self.im * rhs.im) / denom, (self.im * rhs.re - self.re * rhs.im) / denom)
+        Self::new(
+            (self.re * rhs.re + self.im * rhs.im) / denom,
+            (self.im * rhs.re - self.re * rhs.im) / denom,
+        )
     }
 }
 

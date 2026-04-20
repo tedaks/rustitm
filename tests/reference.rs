@@ -22,15 +22,14 @@ fn p2p_tls_cmd_example_matches_ref() {
     let pfl = load_pfl("cmd_examples/pfl.txt");
 
     let out = itm_p2p_tls(
-        15.0, 3.0, &pfl,
-        5,      // climate: continental temperate
+        15.0, 3.0, &pfl, 5,      // climate: continental temperate
         301.0,  // N_0
         3500.0, // f__mhz
         1,      // pol: vertical
-        15.0, 0.005,
-        1,      // mdvar: accidental
+        15.0, 0.005, 1, // mdvar: accidental
         50.0, 50.0, 50.0,
-    ).expect("itm_p2p_tls ok");
+    )
+    .expect("itm_p2p_tls ok");
 
     let expected = 114.5;
     assert!(
@@ -54,17 +53,47 @@ fn area_tls_csv_matches_ref() {
             continue;
         }
         let r = read_csv_row(line);
-        let (h_tx, h_rx, delta_h, mdvar, d_km, tx_site, rx_site,
-             epsilon, sigma, n_0, f_mhz, pol, climate,
-             time, location, situation, expected)
-             = (r[0], r[1], r[2], r[3] as i32, r[4],
-                r[5] as i32, r[6] as i32, r[7], r[8], r[9], r[10],
-                r[11] as i32, r[12] as i32, r[13], r[14], r[15], r[16]);
+        let (
+            h_tx,
+            h_rx,
+            delta_h,
+            mdvar,
+            d_km,
+            tx_site,
+            rx_site,
+            epsilon,
+            sigma,
+            n_0,
+            f_mhz,
+            pol,
+            climate,
+            time,
+            location,
+            situation,
+            expected,
+        ) = (
+            r[0],
+            r[1],
+            r[2],
+            r[3] as i32,
+            r[4],
+            r[5] as i32,
+            r[6] as i32,
+            r[7],
+            r[8],
+            r[9],
+            r[10],
+            r[11] as i32,
+            r[12] as i32,
+            r[13],
+            r[14],
+            r[15],
+            r[16],
+        );
 
         let got = itm_area_tls(
-            h_tx, h_rx, tx_site, rx_site, d_km, delta_h,
-            climate, n_0, f_mhz, pol, epsilon, sigma, mdvar,
-            time, location, situation,
+            h_tx, h_rx, tx_site, rx_site, d_km, delta_h, climate, n_0, f_mhz, pol, epsilon, sigma,
+            mdvar, time, location, situation,
         );
 
         match got {
@@ -73,7 +102,10 @@ fn area_tls_csv_matches_ref() {
                 if diff >= 0.1 {
                     failures.push(format!(
                         "row {}: got {:.4} dB, expected {:.4} dB (diff {:.4})",
-                        idx + 2, out.a__db, expected, diff,
+                        idx + 2,
+                        out.a__db,
+                        expected,
+                        diff,
                     ));
                 }
             }

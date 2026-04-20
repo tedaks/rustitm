@@ -40,7 +40,8 @@ pub fn compute_delta_h(pfl: &[f64], d_start__meter: f64, d_end__meter: f64) -> f
             i += 1;
         }
 
-        s[j as usize + 2] = pfl[i as usize + 3] + (pfl[i as usize + 3] - pfl[i as usize + 2]) * x_start;
+        s[j as usize + 2] =
+            pfl[i as usize + 3] + (pfl[i as usize + 3] - pfl[i as usize + 2]) * x_start;
 
         x_start += x_end;
     }
@@ -63,7 +64,8 @@ pub fn compute_delta_h(pfl: &[f64], d_start__meter: f64, d_end__meter: f64) -> f
 
     let delta_h_d__meter = q10 - q90;
 
-    let delta_h__meter = delta_h_d__meter / (1.0 - 0.8 * (-(d_end__meter - d_start__meter) / 50e3).exp());
+    let delta_h__meter =
+        delta_h_d__meter / (1.0 - 0.8 * (-(d_end__meter - d_start__meter) / 50e3).exp());
 
     delta_h__meter
 }
@@ -95,8 +97,10 @@ pub fn find_horizons(
         d_tx__meter += xi;
         d_rx__meter -= xi;
 
-        let theta_tx = (pfl[(i + 2) as usize] - z_tx__meter) / d_tx__meter - d_tx__meter / (2.0 * a_e__meter);
-        let theta_rx = -(z_rx__meter - pfl[(i + 2) as usize]) / d_rx__meter - d_rx__meter / (2.0 * a_e__meter);
+        let theta_tx =
+            (pfl[(i + 2) as usize] - z_tx__meter) / d_tx__meter - d_tx__meter / (2.0 * a_e__meter);
+        let theta_rx =
+            -(z_rx__meter - pfl[(i + 2) as usize]) / d_rx__meter - d_rx__meter / (2.0 * a_e__meter);
 
         if theta_tx > theta_hzn[0] {
             theta_hzn[0] = theta_tx;
@@ -133,7 +137,8 @@ pub fn linear_least_squares_fit(
     let mid_shifted_end = i_end as f64 + mid_shifted_index;
 
     let mut sum_y = 0.5 * (pfl[i_start as usize + 2] + pfl[i_end as usize + 2]);
-    let mut scaled_sum_y = 0.5 * (pfl[i_start as usize + 2] - pfl[i_end as usize + 2]) * mid_shifted_index;
+    let mut scaled_sum_y =
+        0.5 * (pfl[i_start as usize + 2] - pfl[i_end as usize + 2]) * mid_shifted_index;
 
     let mut i_start_iter = i_start;
     for _i in 2..=(x_length as i32) {

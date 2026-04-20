@@ -1,7 +1,7 @@
-use crate::helper::{curve, inverse_complementary_cumulative_distribution_function};
 use crate::constants::{A_9000_METER, THIRD};
-use crate::terrain::terrain_roughness;
 use crate::errors::*;
+use crate::helper::{curve, inverse_complementary_cumulative_distribution_function};
+use crate::terrain::terrain_roughness;
 
 pub fn variability(
     time: f64,
@@ -17,18 +17,24 @@ pub fn variability(
     warnings: &mut i32,
 ) -> f64 {
     let all_year: [[f64; 7]; 5] = [
-        [  -9.67,   -0.62,    1.26,   -9.21,   -0.62,   -0.39,      3.15 ],
-        [  12.7,     9.19,   15.5,     9.05,    9.19,    2.86,   857.9   ],
-        [  144.9e3, 228.9e3, 262.6e3,  84.1e3, 228.9e3, 141.7e3, 2222.0e3  ],
-        [  190.3e3, 205.2e3, 185.2e3, 101.1e3, 205.2e3, 315.9e3,  164.8e3 ],
-        [  133.8e3, 143.6e3,  99.8e3,  98.6e3, 143.6e3, 167.4e3,  116.3e3 ]
+        [-9.67, -0.62, 1.26, -9.21, -0.62, -0.39, 3.15],
+        [12.7, 9.19, 15.5, 9.05, 9.19, 2.86, 857.9],
+        [
+            144.9e3, 228.9e3, 262.6e3, 84.1e3, 228.9e3, 141.7e3, 2222.0e3,
+        ],
+        [
+            190.3e3, 205.2e3, 185.2e3, 101.1e3, 205.2e3, 315.9e3, 164.8e3,
+        ],
+        [133.8e3, 143.6e3, 99.8e3, 98.6e3, 143.6e3, 167.4e3, 116.3e3],
     ];
 
     let bsm1 = [2.13, 2.66, 6.11, 1.98, 2.68, 6.86, 8.51];
     let bsm2 = [159.5, 7.67, 6.65, 13.11, 7.16, 10.38, 169.8];
-    let xsm1 = [762.2e3, 100.4e3, 138.2e3, 139.1e3,  93.7e3, 187.8e3, 609.8e3];
-    let xsm2 = [123.6e3, 172.5e3, 242.2e3, 132.7e3, 186.8e3, 169.6e3, 119.9e3];
-    let xsm3 = [94.5e3,  136.4e3, 178.6e3, 193.5e3, 133.5e3, 108.9e3, 106.6e3];
+    let xsm1 = [762.2e3, 100.4e3, 138.2e3, 139.1e3, 93.7e3, 187.8e3, 609.8e3];
+    let xsm2 = [
+        123.6e3, 172.5e3, 242.2e3, 132.7e3, 186.8e3, 169.6e3, 119.9e3,
+    ];
+    let xsm3 = [94.5e3, 136.4e3, 178.6e3, 193.5e3, 133.5e3, 108.9e3, 106.6e3];
 
     let bsp1 = [2.11, 6.87, 10.08, 3.68, 4.75, 8.58, 8.43];
     let bsp2 = [102.3, 15.53, 9.60, 159.3, 8.12, 13.97, 8.19];
@@ -55,7 +61,9 @@ pub fn variability(
 
     let wn = f__mhz / 47.7;
 
-    let d_ex__meter = (2.0 * A_9000_METER * h_e__meter[0]).sqrt() + (2.0 * A_9000_METER * h_e__meter[1]).sqrt() + (575.7e12 / wn).powf(THIRD);
+    let d_ex__meter = (2.0 * A_9000_METER * h_e__meter[0]).sqrt()
+        + (2.0 * A_9000_METER * h_e__meter[1]).sqrt()
+        + (575.7e12 / wn).powf(THIRD);
 
     let d_e__meter;
     if d__meter < d_ex__meter {
@@ -83,7 +91,14 @@ pub fn variability(
         mdvar_internal -= 10;
     }
 
-    let v_med__db = curve(all_year[0][climate_idx], all_year[1][climate_idx], all_year[2][climate_idx], all_year[3][climate_idx], all_year[4][climate_idx], d_e__meter);
+    let v_med__db = curve(
+        all_year[0][climate_idx],
+        all_year[1][climate_idx],
+        all_year[2][climate_idx],
+        all_year[3][climate_idx],
+        all_year[4][climate_idx],
+        d_e__meter,
+    );
 
     if mdvar_internal == 0 {
         z_t = z_s;
@@ -111,8 +126,22 @@ pub fn variability(
     let g_minus = bfm1[climate_idx] + bfm2[climate_idx] / ((bfm3[climate_idx] * q).powi(2) + 1.0);
     let g_plus = bfp1[climate_idx] + bfp2[climate_idx] / ((bfp3[climate_idx] * q).powi(2) + 1.0);
 
-    let sigma_t_minus = curve(bsm1[climate_idx], bsm2[climate_idx], xsm1[climate_idx], xsm2[climate_idx], xsm3[climate_idx], d_e__meter) * g_minus;
-    let sigma_t_plus = curve(bsp1[climate_idx], bsp2[climate_idx], xsp1[climate_idx], xsp2[climate_idx], xsp3[climate_idx], d_e__meter) * g_plus;
+    let sigma_t_minus = curve(
+        bsm1[climate_idx],
+        bsm2[climate_idx],
+        xsm1[climate_idx],
+        xsm2[climate_idx],
+        xsm3[climate_idx],
+        d_e__meter,
+    ) * g_minus;
+    let sigma_t_plus = curve(
+        bsp1[climate_idx],
+        bsp2[climate_idx],
+        xsp1[climate_idx],
+        xsp2[climate_idx],
+        xsp3[climate_idx],
+        d_e__meter,
+    ) * g_plus;
 
     let sigma_td = c_d[climate_idx] * sigma_t_plus;
     let tgtd = (sigma_t_plus - sigma_td) * z_d[climate_idx];
@@ -127,14 +156,21 @@ pub fn variability(
     }
     let y_t = sigma_t * z_t;
 
-    let y_s_temp = sigma_s.powi(2) + y_t.powi(2) / (7.8 + z_s.powi(2)) + y_l.powi(2) / (24.0 + z_s.powi(2));
+    let y_s_temp =
+        sigma_s.powi(2) + y_t.powi(2) / (7.8 + z_s.powi(2)) + y_l.powi(2) / (24.0 + z_s.powi(2));
 
     let (y_r, y_s): (f64, f64) = if mdvar_internal == 0 {
-        (0.0, (sigma_t.powi(2) + sigma_l.powi(2) + y_s_temp).sqrt() * z_s)
+        (
+            0.0,
+            (sigma_t.powi(2) + sigma_l.powi(2) + y_s_temp).sqrt() * z_s,
+        )
     } else if mdvar_internal == 1 {
         (y_t, (sigma_l.powi(2) + y_s_temp).sqrt() * z_s)
     } else if mdvar_internal == 2 {
-        ((sigma_t.powi(2) + sigma_l.powi(2)).sqrt() * z_t, y_s_temp.sqrt() * z_s)
+        (
+            (sigma_t.powi(2) + sigma_l.powi(2)).sqrt() * z_t,
+            y_s_temp.sqrt() * z_s,
+        )
     } else {
         (y_t + y_l, y_s_temp.sqrt() * z_s)
     };
@@ -181,7 +217,14 @@ pub fn validate_inputs(
         return ERROR_RX_TERMINAL_HEIGHT;
     }
 
-    if climate != 1 && climate != 2 && climate != 3 && climate != 4 && climate != 5 && climate != 6 && climate != 7 {
+    if climate != 1
+        && climate != 2
+        && climate != 3
+        && climate != 4
+        && climate != 5
+        && climate != 6
+        && climate != 7
+    {
         return ERROR_INVALID_RADIO_CLIMATE;
     }
 
@@ -208,7 +251,12 @@ pub fn validate_inputs(
         return ERROR_SIGMA;
     }
 
-    if (mdvar < 0) || (mdvar > 3 && mdvar < 10) || (mdvar > 13 && mdvar < 20) || (mdvar > 23 && mdvar < 30) || (mdvar > 33) {
+    if (mdvar < 0)
+        || (mdvar > 3 && mdvar < 10)
+        || (mdvar > 13 && mdvar < 20)
+        || (mdvar > 23 && mdvar < 30)
+        || (mdvar > 33)
+    {
         return ERROR_MDVAR;
     }
 

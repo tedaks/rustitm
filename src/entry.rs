@@ -1,13 +1,13 @@
-use crate::types::{ComplexDouble, IntermediateValues};
-use crate::constants::{MODE_P2P, MODE_AREA};
-use crate::enums::*;
-use crate::initialization::{initialize_point_to_point, initialize_area, quick_pfl};
-use crate::variability::{variability, free_space_loss, validate_inputs};
+use crate::constants::{MODE_AREA, MODE_P2P};
 use crate::diffraction::diffraction_loss;
+use crate::enums::*;
+use crate::errors::*;
+use crate::helper::{fortran_dim, itm_max, itm_min};
+use crate::initialization::{initialize_area, initialize_point_to_point, quick_pfl};
 use crate::los::line_of_sight_loss;
 use crate::troposcatter::troposcatter_loss;
-use crate::helper::{itm_max, itm_min, fortran_dim};
-use crate::errors::*;
+use crate::types::{ComplexDouble, IntermediateValues};
+use crate::variability::{free_space_loss, validate_inputs, variability};
 
 pub fn longley_rice(
     theta_hzn: [f64; 2],
@@ -76,11 +76,38 @@ pub fn longley_rice(
         return ERROR_GROUND_IMPEDANCE;
     }
 
-    let d_3__meter = itm_max(d_sML__meter, d_ML__meter + 5.0 * (a_e__meter.powi(2) / f__mhz).powf(1.0 / 3.0));
+    let d_3__meter = itm_max(
+        d_sML__meter,
+        d_ML__meter + 5.0 * (a_e__meter.powi(2) / f__mhz).powf(1.0 / 3.0),
+    );
     let d_4__meter = d_3__meter + 10.0 * (a_e__meter.powi(2) / f__mhz).powf(1.0 / 3.0);
 
-    let a_3__db = diffraction_loss(d_3__meter, d_hzn__meter, h_e__meter, z_g, a_e__meter, delta_h__meter, h__meter, mode, theta_los, d_sML__meter, f__mhz);
-    let a_4__db = diffraction_loss(d_4__meter, d_hzn__meter, h_e__meter, z_g, a_e__meter, delta_h__meter, h__meter, mode, theta_los, d_sML__meter, f__mhz);
+    let a_3__db = diffraction_loss(
+        d_3__meter,
+        d_hzn__meter,
+        h_e__meter,
+        z_g,
+        a_e__meter,
+        delta_h__meter,
+        h__meter,
+        mode,
+        theta_los,
+        d_sML__meter,
+        f__mhz,
+    );
+    let a_4__db = diffraction_loss(
+        d_4__meter,
+        d_hzn__meter,
+        h_e__meter,
+        z_g,
+        a_e__meter,
+        delta_h__meter,
+        h__meter,
+        mode,
+        theta_los,
+        d_sML__meter,
+        f__mhz,
+    );
 
     let m_d = (a_4__db - a_3__db) / (d_4__meter - d_3__meter);
     let a_d0__db = a_3__db - m_d * d_3__meter;
@@ -113,7 +140,16 @@ pub fn longley_rice(
             d_1__meter = itm_max(-a_d0__db / m_d, 0.25 * d_ML__meter);
         }
 
-        let a_1__db = line_of_sight_loss(d_1__meter, h_e__meter, z_g, delta_h__meter, m_d, a_d0__db, d_sML__meter, f__mhz);
+        let a_1__db = line_of_sight_loss(
+            d_1__meter,
+            h_e__meter,
+            z_g,
+            delta_h__meter,
+            m_d,
+            a_d0__db,
+            d_sML__meter,
+            f__mhz,
+        );
 
         let mut flag = false;
 
@@ -121,17 +157,32 @@ pub fn longley_rice(
         let mut k_hat_2__db_per_meter = 0.0f64;
 
         if d_0__meter < d_1__meter {
-            let a_0__db = line_of_sight_loss(d_0__meter, h_e__meter, z_g, delta_h__meter, m_d, a_d0__db, d_sML__meter, f__mhz);
+            let a_0__db = line_of_sight_loss(
+                d_0__meter,
+                h_e__meter,
+                z_g,
+                delta_h__meter,
+                m_d,
+                a_d0__db,
+                d_sML__meter,
+                f__mhz,
+            );
 
             let q = (d_sML__meter / d_0__meter).ln();
 
-            k_hat_2__db_per_meter = itm_max(0.0, ((d_sML__meter - d_0__meter) * (a_1__db - a_0__db) - (d_1__meter - d_0__meter) * (a_sML__db - a_0__db))
-                / ((d_sML__meter - d_0__meter) * (d_1__meter / d_0__meter).ln() - (d_1__meter - d_0__meter) * q));
+            k_hat_2__db_per_meter = itm_max(
+                0.0,
+                ((d_sML__meter - d_0__meter) * (a_1__db - a_0__db)
+                    - (d_1__meter - d_0__meter) * (a_sML__db - a_0__db))
+                    / ((d_sML__meter - d_0__meter) * (d_1__meter / d_0__meter).ln()
+                        - (d_1__meter - d_0__meter) * q),
+            );
 
             flag = a_d0__db > 0.0 || k_hat_2__db_per_meter > 0.0;
 
             if flag {
-                k_hat_1__db_per_meter = (a_sML__db - a_0__db - k_hat_2__db_per_meter * q) / (d_sML__meter - d_0__meter);
+                k_hat_1__db_per_meter =
+                    (a_sML__db - a_0__db - k_hat_2__db_per_meter * q) / (d_sML__meter - d_0__meter);
 
                 if k_hat_1__db_per_meter < 0.0 {
                     k_hat_1__db_per_meter = 0.0;
@@ -153,17 +204,40 @@ pub fn longley_rice(
             }
         }
 
-        let a_o__db = a_sML__db - k_hat_1__db_per_meter * d_sML__meter - k_hat_2__db_per_meter * d_sML__meter.ln();
+        let a_o__db = a_sML__db
+            - k_hat_1__db_per_meter * d_sML__meter
+            - k_hat_2__db_per_meter * d_sML__meter.ln();
 
-        *a_ref__db = a_o__db + k_hat_1__db_per_meter * d__meter + k_hat_2__db_per_meter * d__meter.ln();
+        *a_ref__db =
+            a_o__db + k_hat_1__db_per_meter * d__meter + k_hat_2__db_per_meter * d__meter.ln();
         *propmode = MODE_LINE_OF_SIGHT;
     } else {
         let d_5__meter = d_ML__meter + 200e3;
         let d_6__meter = d_ML__meter + 400e3;
 
         let mut h0 = -1.0f64;
-        let a_6__db = troposcatter_loss(d_6__meter, theta_hzn, d_hzn__meter, h_e__meter, a_e__meter, n_s, f__mhz, theta_los, &mut h0);
-        let a_5__db = troposcatter_loss(d_5__meter, theta_hzn, d_hzn__meter, h_e__meter, a_e__meter, n_s, f__mhz, theta_los, &mut h0);
+        let a_6__db = troposcatter_loss(
+            d_6__meter,
+            theta_hzn,
+            d_hzn__meter,
+            h_e__meter,
+            a_e__meter,
+            n_s,
+            f__mhz,
+            theta_los,
+            &mut h0,
+        );
+        let a_5__db = troposcatter_loss(
+            d_5__meter,
+            theta_hzn,
+            d_hzn__meter,
+            h_e__meter,
+            a_e__meter,
+            n_s,
+            f__mhz,
+            theta_los,
+            &mut h0,
+        );
 
         let m_s: f64;
         let a_s0__db: f64;
@@ -173,8 +247,12 @@ pub fn longley_rice(
             m_s = (a_6__db - a_5__db) / 200e3;
 
             d_x__meter = itm_max(
-                itm_max(d_sML__meter, d_ML__meter + 1.088 * (a_e__meter.powi(2) / f__mhz).powf(1.0 / 3.0) * f__mhz.ln()),
-                (a_5__db - a_d0__db - m_s * d_5__meter) / (m_d - m_s)
+                itm_max(
+                    d_sML__meter,
+                    d_ML__meter
+                        + 1.088 * (a_e__meter.powi(2) / f__mhz).powf(1.0 / 3.0) * f__mhz.ln(),
+                ),
+                (a_5__db - a_d0__db - m_s * d_5__meter) / (m_d - m_s),
             );
 
             a_s0__db = (m_d - m_s) * d_x__meter + a_d0__db;
@@ -222,7 +300,21 @@ pub fn itm_p2p_tls_ex(
     let mut inter_values = IntermediateValues::default();
     let mut warnings: i32 = NO_WARNINGS;
 
-    let rtn = validate_inputs(h_tx__meter, h_rx__meter, climate, time, location, situation, n_0, f__mhz, pol, epsilon, sigma, mdvar, &mut warnings);
+    let rtn = validate_inputs(
+        h_tx__meter,
+        h_rx__meter,
+        climate,
+        time,
+        location,
+        situation,
+        n_0,
+        f__mhz,
+        pol,
+        epsilon,
+        sigma,
+        mdvar,
+        &mut warnings,
+    );
     if rtn != SUCCESS {
         return Err(rtn);
     }
@@ -244,7 +336,17 @@ pub fn itm_p2p_tls_ex(
     let mut gamma_e = 0.0f64;
     let mut n_s = 0.0f64;
 
-    initialize_point_to_point(f__mhz, h_sys__meter, n_0, pol, epsilon, sigma, &mut z_g, &mut gamma_e, &mut n_s);
+    initialize_point_to_point(
+        f__mhz,
+        h_sys__meter,
+        n_0,
+        pol,
+        epsilon,
+        sigma,
+        &mut z_g,
+        &mut gamma_e,
+        &mut n_s,
+    );
 
     let h__meter = [h_tx__meter, h_rx__meter];
     let mut theta_hzn = [0.0f64; 2];
@@ -253,18 +355,54 @@ pub fn itm_p2p_tls_ex(
     let mut delta_h__meter = 0.0f64;
     let mut d__meter = 0.0f64;
 
-    quick_pfl(pfl, gamma_e, h__meter, &mut theta_hzn, &mut d_hzn__meter, &mut h_e__meter, &mut delta_h__meter, &mut d__meter);
+    quick_pfl(
+        pfl,
+        gamma_e,
+        h__meter,
+        &mut theta_hzn,
+        &mut d_hzn__meter,
+        &mut h_e__meter,
+        &mut delta_h__meter,
+        &mut d__meter,
+    );
 
     let mut a_ref__db = 0.0f64;
     let mut propmode = MODE_NOT_SET;
-    let rtn = longley_rice(theta_hzn, f__mhz, z_g, d_hzn__meter, h_e__meter, gamma_e, n_s, delta_h__meter, h__meter, d__meter, MODE_P2P, &mut a_ref__db, &mut warnings, &mut propmode);
+    let rtn = longley_rice(
+        theta_hzn,
+        f__mhz,
+        z_g,
+        d_hzn__meter,
+        h_e__meter,
+        gamma_e,
+        n_s,
+        delta_h__meter,
+        h__meter,
+        d__meter,
+        MODE_P2P,
+        &mut a_ref__db,
+        &mut warnings,
+        &mut propmode,
+    );
     if rtn != SUCCESS {
         return Err(rtn);
     }
 
     let a_fs__db = free_space_loss(d__meter, f__mhz);
 
-    let a__db = variability(time, location, situation, h_e__meter, delta_h__meter, f__mhz, d__meter, a_ref__db, climate, mdvar, &mut warnings) + a_fs__db;
+    let a__db = variability(
+        time,
+        location,
+        situation,
+        h_e__meter,
+        delta_h__meter,
+        f__mhz,
+        d__meter,
+        a_ref__db,
+        climate,
+        mdvar,
+        &mut warnings,
+    ) + a_fs__db;
 
     inter_values.a_ref__db = a_ref__db;
     inter_values.a_fs__db = a_fs__db;
@@ -276,9 +414,17 @@ pub fn itm_p2p_tls_ex(
     inter_values.mode = propmode;
 
     if warnings != NO_WARNINGS {
-        Ok(ItmOutput { a__db, warnings: SUCCESS_WITH_WARNINGS, inter_values })
+        Ok(ItmOutput {
+            a__db,
+            warnings: SUCCESS_WITH_WARNINGS,
+            inter_values,
+        })
     } else {
-        Ok(ItmOutput { a__db, warnings: SUCCESS, inter_values })
+        Ok(ItmOutput {
+            a__db,
+            warnings: SUCCESS,
+            inter_values,
+        })
     }
 }
 
@@ -297,7 +443,21 @@ pub fn itm_p2p_tls(
     location: f64,
     situation: f64,
 ) -> Result<ItmOutput, i32> {
-    itm_p2p_tls_ex(h_tx__meter, h_rx__meter, pfl, climate, n_0, f__mhz, pol, epsilon, sigma, mdvar, time, location, situation)
+    itm_p2p_tls_ex(
+        h_tx__meter,
+        h_rx__meter,
+        pfl,
+        climate,
+        n_0,
+        f__mhz,
+        pol,
+        epsilon,
+        sigma,
+        mdvar,
+        time,
+        location,
+        situation,
+    )
 }
 
 pub fn itm_p2p_cr(
@@ -314,7 +474,21 @@ pub fn itm_p2p_cr(
     confidence: f64,
     reliability: f64,
 ) -> Result<ItmOutput, i32> {
-    let result = itm_p2p_tls_ex(h_tx__meter, h_rx__meter, pfl, climate, n_0, f__mhz, pol, epsilon, sigma, mdvar, reliability, 50.0, confidence);
+    let result = itm_p2p_tls_ex(
+        h_tx__meter,
+        h_rx__meter,
+        pfl,
+        climate,
+        n_0,
+        f__mhz,
+        pol,
+        epsilon,
+        sigma,
+        mdvar,
+        reliability,
+        50.0,
+        confidence,
+    );
 
     match result {
         Err(ERROR_INVALID_TIME) => Err(ERROR_INVALID_RELIABILITY),
@@ -337,7 +511,21 @@ pub fn itm_p2p_cr_ex(
     confidence: f64,
     reliability: f64,
 ) -> Result<ItmOutput, i32> {
-    let result = itm_p2p_tls_ex(h_tx__meter, h_rx__meter, pfl, climate, n_0, f__mhz, pol, epsilon, sigma, mdvar, reliability, 50.0, confidence);
+    let result = itm_p2p_tls_ex(
+        h_tx__meter,
+        h_rx__meter,
+        pfl,
+        climate,
+        n_0,
+        f__mhz,
+        pol,
+        epsilon,
+        sigma,
+        mdvar,
+        reliability,
+        50.0,
+        confidence,
+    );
 
     match result {
         Err(ERROR_INVALID_TIME) => Err(ERROR_INVALID_RELIABILITY),
@@ -367,7 +555,21 @@ pub fn itm_area_tls_ex(
     let mut inter_values = IntermediateValues::default();
     let mut warnings: i32 = NO_WARNINGS;
 
-    let rtn = validate_inputs(h_tx__meter, h_rx__meter, climate, time, location, situation, n_0, f__mhz, pol, epsilon, sigma, mdvar, &mut warnings);
+    let rtn = validate_inputs(
+        h_tx__meter,
+        h_rx__meter,
+        climate,
+        time,
+        location,
+        situation,
+        n_0,
+        f__mhz,
+        pol,
+        epsilon,
+        sigma,
+        mdvar,
+        &mut warnings,
+    );
     if rtn != SUCCESS {
         return Err(rtn);
     }
@@ -378,10 +580,16 @@ pub fn itm_area_tls_ex(
     if delta_h__meter < 0.0 {
         return Err(ERROR_DELTA_H);
     }
-    if tx_site_criteria != SITING_CRITERIA_RANDOM && tx_site_criteria != SITING_CRITERIA_CAREFUL && tx_site_criteria != SITING_CRITERIA_VERY_CAREFUL {
+    if tx_site_criteria != SITING_CRITERIA_RANDOM
+        && tx_site_criteria != SITING_CRITERIA_CAREFUL
+        && tx_site_criteria != SITING_CRITERIA_VERY_CAREFUL
+    {
         return Err(ERROR_TX_SITING_CRITERIA);
     }
-    if rx_site_criteria != SITING_CRITERIA_RANDOM && rx_site_criteria != SITING_CRITERIA_CAREFUL && rx_site_criteria != SITING_CRITERIA_VERY_CAREFUL {
+    if rx_site_criteria != SITING_CRITERIA_RANDOM
+        && rx_site_criteria != SITING_CRITERIA_CAREFUL
+        && rx_site_criteria != SITING_CRITERIA_VERY_CAREFUL
+    {
         return Err(ERROR_RX_SITING_CRITERIA);
     }
 
@@ -397,20 +605,66 @@ pub fn itm_area_tls_ex(
     let mut gamma_e = 0.0f64;
     let mut a_ref__db = 0.0f64;
 
-    initialize_point_to_point(f__mhz, 0.0, n_0, pol, epsilon, sigma, &mut z_g, &mut gamma_e, &mut n_s);
+    initialize_point_to_point(
+        f__mhz,
+        0.0,
+        n_0,
+        pol,
+        epsilon,
+        sigma,
+        &mut z_g,
+        &mut gamma_e,
+        &mut n_s,
+    );
 
-    initialize_area(site_criteria, gamma_e, delta_h__meter, h__meter, &mut h_e__meter, &mut d_hzn__meter, &mut theta_hzn);
+    initialize_area(
+        site_criteria,
+        gamma_e,
+        delta_h__meter,
+        h__meter,
+        &mut h_e__meter,
+        &mut d_hzn__meter,
+        &mut theta_hzn,
+    );
 
     let d__meter = d__km * 1000.0;
     let mut propmode = MODE_NOT_SET;
-    let rtn = longley_rice(theta_hzn, f__mhz, z_g, d_hzn__meter, h_e__meter, gamma_e, n_s, delta_h__meter, h__meter, d__meter, MODE_AREA, &mut a_ref__db, &mut warnings, &mut propmode);
+    let rtn = longley_rice(
+        theta_hzn,
+        f__mhz,
+        z_g,
+        d_hzn__meter,
+        h_e__meter,
+        gamma_e,
+        n_s,
+        delta_h__meter,
+        h__meter,
+        d__meter,
+        MODE_AREA,
+        &mut a_ref__db,
+        &mut warnings,
+        &mut propmode,
+    );
     if rtn != SUCCESS {
         return Err(rtn);
     }
 
     let a_fs__db = free_space_loss(d__meter, f__mhz);
 
-    let a__db = a_fs__db + variability(time, location, situation, h_e__meter, delta_h__meter, f__mhz, d__meter, a_ref__db, climate, mdvar, &mut warnings);
+    let a__db = a_fs__db
+        + variability(
+            time,
+            location,
+            situation,
+            h_e__meter,
+            delta_h__meter,
+            f__mhz,
+            d__meter,
+            a_ref__db,
+            climate,
+            mdvar,
+            &mut warnings,
+        );
 
     inter_values.a_ref__db = a_ref__db;
     inter_values.a_fs__db = a_fs__db;
@@ -422,9 +676,17 @@ pub fn itm_area_tls_ex(
     inter_values.mode = propmode;
 
     if warnings != NO_WARNINGS {
-        Ok(ItmOutput { a__db, warnings: SUCCESS_WITH_WARNINGS, inter_values })
+        Ok(ItmOutput {
+            a__db,
+            warnings: SUCCESS_WITH_WARNINGS,
+            inter_values,
+        })
     } else {
-        Ok(ItmOutput { a__db, warnings: SUCCESS, inter_values })
+        Ok(ItmOutput {
+            a__db,
+            warnings: SUCCESS,
+            inter_values,
+        })
     }
 }
 
@@ -446,7 +708,24 @@ pub fn itm_area_tls(
     location: f64,
     situation: f64,
 ) -> Result<ItmOutput, i32> {
-    itm_area_tls_ex(h_tx__meter, h_rx__meter, tx_site_criteria, rx_site_criteria, d__km, delta_h__meter, climate, n_0, f__mhz, pol, epsilon, sigma, mdvar, time, location, situation)
+    itm_area_tls_ex(
+        h_tx__meter,
+        h_rx__meter,
+        tx_site_criteria,
+        rx_site_criteria,
+        d__km,
+        delta_h__meter,
+        climate,
+        n_0,
+        f__mhz,
+        pol,
+        epsilon,
+        sigma,
+        mdvar,
+        time,
+        location,
+        situation,
+    )
 }
 
 pub fn itm_area_cr(
@@ -466,7 +745,24 @@ pub fn itm_area_cr(
     confidence: f64,
     reliability: f64,
 ) -> Result<ItmOutput, i32> {
-    let result = itm_area_tls_ex(h_tx__meter, h_rx__meter, tx_site_criteria, rx_site_criteria, d__km, delta_h__meter, climate, n_0, f__mhz, pol, epsilon, sigma, mdvar, reliability, 50.0, confidence);
+    let result = itm_area_tls_ex(
+        h_tx__meter,
+        h_rx__meter,
+        tx_site_criteria,
+        rx_site_criteria,
+        d__km,
+        delta_h__meter,
+        climate,
+        n_0,
+        f__mhz,
+        pol,
+        epsilon,
+        sigma,
+        mdvar,
+        reliability,
+        50.0,
+        confidence,
+    );
 
     match result {
         Err(ERROR_INVALID_TIME) => Err(ERROR_INVALID_RELIABILITY),
@@ -492,7 +788,24 @@ pub fn itm_area_cr_ex(
     confidence: f64,
     reliability: f64,
 ) -> Result<ItmOutput, i32> {
-    let result = itm_area_tls_ex(h_tx__meter, h_rx__meter, tx_site_criteria, rx_site_criteria, d__km, delta_h__meter, climate, n_0, f__mhz, pol, epsilon, sigma, mdvar, reliability, 50.0, confidence);
+    let result = itm_area_tls_ex(
+        h_tx__meter,
+        h_rx__meter,
+        tx_site_criteria,
+        rx_site_criteria,
+        d__km,
+        delta_h__meter,
+        climate,
+        n_0,
+        f__mhz,
+        pol,
+        epsilon,
+        sigma,
+        mdvar,
+        reliability,
+        50.0,
+        confidence,
+    );
 
     match result {
         Err(ERROR_INVALID_TIME) => Err(ERROR_INVALID_RELIABILITY),

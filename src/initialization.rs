@@ -1,8 +1,8 @@
-use crate::types::ComplexDouble;
 use crate::constants::{GAMMA_A, PI};
 use crate::enums::*;
-use crate::helper::{itm_min, itm_max, fortran_dim};
-use crate::terrain::{find_horizons, compute_delta_h, linear_least_squares_fit};
+use crate::helper::{fortran_dim, itm_max, itm_min};
+use crate::terrain::{compute_delta_h, find_horizons, linear_least_squares_fit};
+use crate::types::ComplexDouble;
 
 pub fn initialize_point_to_point(
     f__mhz: f64,
@@ -57,15 +57,20 @@ pub fn initialize_area(
                 b = b * (0.1 * PI * h__meter[i]).sin();
             }
 
-            h_e__meter[i] = h__meter[i] + (1.0 + b) * (-itm_min(20.0, 2.0 * h__meter[i] / itm_max(1e-3, delta_h__meter))).exp();
+            h_e__meter[i] = h__meter[i]
+                + (1.0 + b)
+                    * (-itm_min(20.0, 2.0 * h__meter[i] / itm_max(1e-3, delta_h__meter))).exp();
         }
 
         let d_ls__meter = (2.0 * h_e__meter[i] / gamma_e).sqrt();
 
         let h_3__meter = 5.0;
-        d_hzn__meter[i] = d_ls__meter * (-0.07 * (delta_h__meter / itm_max(h_e__meter[i], h_3__meter)).sqrt()).exp();
+        d_hzn__meter[i] = d_ls__meter
+            * (-0.07 * (delta_h__meter / itm_max(h_e__meter[i], h_3__meter)).sqrt()).exp();
 
-        theta_hzn[i] = (0.65 * delta_h__meter * (d_ls__meter / d_hzn__meter[i] - 1.0) - 2.0 * h_e__meter[i]) / d_ls__meter;
+        theta_hzn[i] = (0.65 * delta_h__meter * (d_ls__meter / d_hzn__meter[i] - 1.0)
+            - 2.0 * h_e__meter[i])
+            / d_ls__meter;
     }
 }
 
@@ -105,7 +110,8 @@ pub fn quick_pfl(
         h_e__meter[1] = h__meter[1] + fortran_dim(pfl[(np + 2) as usize], fit_rx);
 
         for i in 0..2 {
-            d_hzn__meter[i] = (2.0 * h_e__meter[i] * a_e__meter).sqrt() * (-0.07 * (*delta_h__meter / itm_max(h_e__meter[i], 5.0)).sqrt()).exp();
+            d_hzn__meter[i] = (2.0 * h_e__meter[i] * a_e__meter).sqrt()
+                * (-0.07 * (*delta_h__meter / itm_max(h_e__meter[i], 5.0)).sqrt()).exp();
         }
 
         let combined_horizons__meter = d_hzn__meter[0] + d_hzn__meter[1];
@@ -114,21 +120,35 @@ pub fn quick_pfl(
 
             for i in 0..2 {
                 h_e__meter[i] = h_e__meter[i] * q;
-                d_hzn__meter[i] = (2.0 * h_e__meter[i] * a_e__meter).sqrt() * (-0.07 * (*delta_h__meter / itm_max(h_e__meter[i], 5.0)).sqrt()).exp();
+                d_hzn__meter[i] = (2.0 * h_e__meter[i] * a_e__meter).sqrt()
+                    * (-0.07 * (*delta_h__meter / itm_max(h_e__meter[i], 5.0)).sqrt()).exp();
             }
         }
 
         for i in 0..2 {
             q = (2.0 * h_e__meter[i] * a_e__meter).sqrt();
-            theta_hzn[i] = (0.65 * *delta_h__meter * (q / d_hzn__meter[i] - 1.0) - 2.0 * h_e__meter[i]) / q;
+            theta_hzn[i] =
+                (0.65 * *delta_h__meter * (q / d_hzn__meter[i] - 1.0) - 2.0 * h_e__meter[i]) / q;
         }
     } else {
         let mut dummy = 0.0;
 
-        linear_least_squares_fit(pfl, d_start__meter, 0.9 * d_hzn__meter[0], &mut fit_tx, &mut dummy);
+        linear_least_squares_fit(
+            pfl,
+            d_start__meter,
+            0.9 * d_hzn__meter[0],
+            &mut fit_tx,
+            &mut dummy,
+        );
         h_e__meter[0] = h__meter[0] + fortran_dim(pfl[2], fit_tx);
 
-        linear_least_squares_fit(pfl, *d__meter - 0.9 * d_hzn__meter[1], d_end__meter, &mut dummy, &mut fit_rx);
+        linear_least_squares_fit(
+            pfl,
+            *d__meter - 0.9 * d_hzn__meter[1],
+            d_end__meter,
+            &mut dummy,
+            &mut fit_rx,
+        );
         h_e__meter[1] = h__meter[1] + fortran_dim(pfl[(np + 2) as usize], fit_rx);
     }
 }
