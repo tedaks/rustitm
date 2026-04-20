@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![allow(unknown_lints)]
 #![allow(
     clippy::approx_constant,
     clippy::manual_clamp,
