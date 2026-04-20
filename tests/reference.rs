@@ -1,11 +1,9 @@
-//! Validation against the NTIA/ITS reference vectors in ../itm/.
+//! Validation against the NTIA/ITS reference vectors.
 //!
-//! - p2p: cmd_examples (i_p2ptls.txt + pfl.txt -> o_p2ptls.txt, 114.5 dB)
+//! - p2p: cmd_examples (pfl.txt, expected output 114.5 dB)
 //! - area: all 5 rows of area.csv
 
 use rustitm::entry::{itm_area_tls, itm_p2p_tls};
-
-const ITM_DIR: &str = "/home/bortre/02-lab/sources/itm";
 
 fn read_csv_row(line: &str) -> Vec<f64> {
     line.trim()
@@ -21,9 +19,8 @@ fn load_pfl(path: &str) -> Vec<f64> {
 
 #[test]
 fn p2p_tls_cmd_example_matches_ref() {
-    let pfl = load_pfl(&format!("{}/cmd_examples/pfl.txt", ITM_DIR));
+    let pfl = load_pfl("cmd_examples/pfl.txt");
 
-    // i_p2ptls.txt
     let out = itm_p2p_tls(
         15.0, 3.0, &pfl,
         5,      // climate: continental temperate
@@ -35,7 +32,6 @@ fn p2p_tls_cmd_example_matches_ref() {
         50.0, 50.0, 50.0,
     ).expect("itm_p2p_tls ok");
 
-    // o_p2ptls.txt -> Basic Transmission Loss 114.5 dB
     let expected = 114.5;
     assert!(
         (out.a__db - expected).abs() < 0.1,
@@ -47,9 +43,9 @@ fn p2p_tls_cmd_example_matches_ref() {
 
 #[test]
 fn area_tls_csv_matches_ref() {
-    let csv = std::fs::read_to_string(format!("{}/area.csv", ITM_DIR)).unwrap();
+    let csv = std::fs::read_to_string("area.csv").unwrap();
     let mut lines = csv.lines();
-    lines.next(); // header
+    lines.next();
 
     let mut failures: Vec<String> = Vec::new();
 
@@ -58,7 +54,6 @@ fn area_tls_csv_matches_ref() {
             continue;
         }
         let r = read_csv_row(line);
-        // h_tx,h_rx,delta_h,mdvar,d__km,tx_site,rx_site,epsilon,sigma,N_0,f_mhz,pol,climate,time,location,situation,A__db
         let (h_tx, h_rx, delta_h, mdvar, d_km, tx_site, rx_site,
              epsilon, sigma, n_0, f_mhz, pol, climate,
              time, location, situation, expected)

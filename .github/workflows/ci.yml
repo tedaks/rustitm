@@ -82,8 +82,8 @@ jobs:
       - name: Copy reference CSVs
         run: |
           cp itm_reference/area.csv area.csv
-          cp itm_reference/cmd_examples/pfl.txt itm_reference/cmd_examples/pfl.txt
-        working-directory: rustitm
+          mkdir -p cmd_examples
+          cp itm_reference/cmd_examples/pfl.txt cmd_examples/pfl.txt
 
       - name: Run rustitm tests
         run: cargo test --test reference
