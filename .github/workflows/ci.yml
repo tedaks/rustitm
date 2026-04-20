@@ -66,8 +66,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          path: rustitm
+
+      - uses: actions/checkout@v4
+        with:
           repository: NTIA/itm
-          path: itm_reference
+          path: rustitm/itm_reference
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@master
@@ -77,7 +81,7 @@ jobs:
       - name: Cache cargo target dir
         uses: actions/cache@v4
         with:
-          path: target
+          path: rustitm/target
           key: ${{ runner.os }}-rustitm-test-target-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Copy reference CSVs
@@ -123,6 +127,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: rustitm
 
       - name: Run security audit
         uses: rustsec/audit-check@v2
