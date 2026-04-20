@@ -71,7 +71,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: NTIA/itm
-          path: rustitm/itm_reference
+          path: itm_reference
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@master
@@ -86,9 +86,9 @@ jobs:
 
       - name: Copy reference CSVs
         run: |
-          cp itm_reference/area.csv area.csv
-          mkdir -p cmd_examples
-          cp itm_reference/cmd_examples/pfl.txt cmd_examples/pfl.txt
+          cp itm_reference/area.csv rustitm/area.csv
+          mkdir -p rustitm/cmd_examples
+          cp itm_reference/cmd_examples/pfl.txt rustitm/cmd_examples/pfl.txt
 
       - name: Run rustitm tests
         run: cargo test --test reference
