@@ -1,0 +1,22 @@
+# https://github.com/github/gitignore/blob/main/Rust.gitignore
+
+/target/
+**/*.rs.bk
+Cargo.lock
+*.pfl
+*.pfls
+
+# MSVC Windows builds of rustc
+**/*.pdb
+
+# Cargo
+target/
+**/*.rs.bk
+
+# Editor
+*.swp
+*.swo
+*~
+.idea/
+*.iml
+.vscode/

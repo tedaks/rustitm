@@ -1,0 +1,23 @@
+[package]
+name = "rustitm"
+version = "0.1.0"
+edition = "2021"
+description = "Rust port of the Irregular Terrain Model (ITM) radio propagation library"
+license = "MIT"
+repository = "https://github.com/tedaks/rustitm"
+
+[dependencies]
+
+[dev-dependencies]
+
+[lib]
+name = "rustitm"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rustitm"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
