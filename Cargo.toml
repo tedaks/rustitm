@@ -2,9 +2,11 @@
 name = "rustitm"
 version = "0.1.0"
 edition = "2021"
-description = "Rust port of the Irregular Terrain Model (ITM) radio propagation library"
+description = "Rust port of the ITS Irregular Terrain Model (ITM) radio propagation library"
 license = "MIT"
 repository = "https://github.com/tedaks/rustitm"
+keywords = ["radio", "propagation", "itm", "terrain", "wave", "attenuation", "ntia"]
+categories = ["science", "simulation", "physics"]
 
 [dependencies]
 

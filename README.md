@@ -1,5 +1,9 @@
 # RustITM — Rust Port of the ITS Irregular Terrain Model
 
+[![CI](https://github.com/tedaks/rustitm/actions/workflows/ci.yml/badge.svg)](https://github.com/tedaks/rustitm/actions)
+[![crates.io](https://img.shields.io/crates/v/rustitm.svg)](https://crates.io/crates/rustitm)
+[![docs.rs](https://docs.rs/rustitm/badge.svg)](https://docs.rs/rustitm)
+
 A Rust implementation of the ITS Irregular Terrain Model (ITM) for radio wave propagation prediction. ITM predicts terrestrial radio wave attenuation for frequencies between 20 MHz and 20 GHz, based on electromagnetic theory and empirical models by Anita Longley and Phil Rice. Propagation mechanisms include free space loss, diffraction, and troposcatter.
 
 This crate is a direct port of the [NTIA/ITM C++ library](https://github.com/NTIA/itm), version 1.3 (functionally identical to FORTRAN version 1.2.2).
