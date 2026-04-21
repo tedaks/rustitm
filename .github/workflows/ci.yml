@@ -148,6 +148,9 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Generate Cargo.lock
+        run: cargo generate-lockfile
+
       - name: Cache cargo target dir
         uses: actions/cache@v4
         with:
