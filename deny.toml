@@ -9,6 +9,4 @@ allow = [
 ]
 
 [advisories]
-vulnerability = "deny"
-yanked = "warn"
-notice = "warn"
+version = 2
